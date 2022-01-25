@@ -4,8 +4,8 @@
 
 <script lang="ts">
   import Requset from '@/axios/request'
-  import  { Vue } from 'vue-class-component'
-  
+  import { Vue } from 'vue-class-component'
+
   export default class App extends Vue {
     created(): void {
       console.log("开始请求");

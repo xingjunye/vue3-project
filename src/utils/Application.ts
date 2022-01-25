@@ -1,16 +1,18 @@
+import Cookie, { CookieAttributes, CookiesStatic } from "js-cookie";
+
 interface StorageInterface {
 
   /** 设置 localStorage */
   set: (key: string, value: any) => void
 
   /** 获取 localStorage */
-  get: (key: string) => string | Record<any, any>;
+  get: (key: string) => any;
 
   /** 删除 */
   remove: (key: string) => void;
 
   /** 清空 */
-  clear: () => void;
+  clear?: () => void;
 
 }
 
@@ -48,6 +50,7 @@ class SessionStorage implements StorageInterface{
   clear(): void {
     this.storage.clear();
   }
+
 }
 
 class LocalStorage extends SessionStorage{
@@ -56,5 +59,25 @@ class LocalStorage extends SessionStorage{
   }
 }
 
-export const session = new SessionStorage(window.sessionStorage);
-export const local = new LocalStorage(window.localStorage);
+class CookieStorage implements StorageInterface{
+  private cookie: CookiesStatic<object>;
+  constructor(cookie: CookiesStatic<object>) {
+    this.cookie = cookie;
+  }
+  get(key: string): any {
+    return this.cookie.get(key);
+  }
+
+  set(key: string, value: any, options?: CookieAttributes): void {
+    this.cookie.set(key, value, options);
+  }
+
+  remove(key: string, options?: CookieAttributes): void {
+    this.cookie.remove(key);
+  }
+}
+
+
+export const sessionStorage = new SessionStorage(window.sessionStorage);
+export const localStorage = new LocalStorage(window.localStorage);
+export const cookie = new CookieStorage(Cookie);

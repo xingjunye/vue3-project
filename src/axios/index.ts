@@ -1,14 +1,8 @@
 import axios, { AxiosRequestConfig, Method, CancelTokenStatic, AxiosInstance, AxiosResponse, AxiosError } from "axios"
-import { ElNotification, ElLoading } from 'element-plus'
 
-/** 定义接口 */
-interface PendingType {
-  url?: string
-  method?: Method
-  params: any
-  data: any
-  cancel: Function
-}
+import { ElNotification } from 'element-plus'
+import { errorCodes, PendingType } from "./module";
+import { cookie } from "@/utils/Application"
 
 /** 取消重复请求 */
 const pending: Array<PendingType> = [];
@@ -49,8 +43,22 @@ const instance: AxiosInstance = axios.create({
 
 instance.interceptors.request.use(
   (config: AxiosRequestConfig) => {
-
     removePending(config);
+    const token = cookie.get("accessToken");
+
+
+    
+    const headers: any = {
+      "Authorization": `Basic ${token}`
+    }
+
+    if(config.method === 'post') {
+      headers["Content-type"] = "application/json; charset=UTF-8"
+    }
+
+    config.headers = {...headers, ...(config.headers)};
+
+    console.log("config:", config);
     config.cancelToken = new CancelToken( (c: Function) => {
       pending.push({
         url: config.url,
@@ -74,66 +82,25 @@ instance.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    errorHandle(parseInt(error.code as string));
+    errorHandle(error.response?.status as number, error.response?.statusText);
   }
 );
 
-const errorHandle: Function = (status: number, other: string) => {
-  switch (status) {
-
-    case 302:
-      ElNotification.error("接口重定向了！");
-      break
-
-    case 400:
-      ElNotification.error("发出的请求有错误！");
-      break
-
-    case 401:
-      ElNotification.error("请求有误！");
-      break
-
-    case 403:
-      ElNotification.error("请求有误！");
-      break
-
-    case 404:
-      ElNotification.error("网络请求不存在！");
-      break
-
-    case 406:
-      ElNotification.error("网络请求不存在！");
-      break
-
-    case 410:
-      ElNotification.error("网络请求不存在！");
-      break
-
-    case 422:
-      ElNotification.error("网络请求不存在！");
-      break
-
-    case 500:
-      ElNotification.error("服务器发生错误！");
-      break
-
-    case 502:
-      ElNotification.error("网关错误！");
-      break
-
-    case 503:
-      ElNotification.error("服务器不可用！");
-      break
-
-    case 504:
-      ElNotification.error("请求超时！");
-      break
-
-    case 504:
-      ElNotification.error("请求超时！");
-      break
-    default: 
-      ElNotification.error("其他错误！");
+// 错误处理
+const errorHandle = (status: number, other?: string) => {
+  if(Object.keys(errorCodes).includes(status.toString())) {
+    ElNotification({
+      type: "error",
+      duration: 0,
+      title: status?.toString(),
+      message: errorCodes[status]
+    });
+  } else {
+    ElNotification({
+      type: "error",
+      title: status?.toString(),
+      message: "服务器请求出错!"
+    });
   }
 }
 

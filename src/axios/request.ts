@@ -1,6 +1,6 @@
 import axios from './index'
-import qs from 'qs'
 import { AxiosError, AxiosResponse } from 'axios';
+import { status } from 'nprogress';
 
 export default class Request {
   static get(url: string, params?: Record<string, any>): Promise<any> {
@@ -16,11 +16,16 @@ export default class Request {
     });
   }
 
-  static post(url: string, params?: Record<string, any>): Promise<any> {
+  static post(url: string, data?: Record<string, any> | FormData, params?: any): Promise<any> {
     return new Promise((resolve: Function, reject: Function) => {
-      axios.post(url, qs.stringify(params)).then(
+      axios({
+        url,
+        method: "POST",
+        data,
+        params
+      }).then(
         (response: AxiosResponse) => {
-          resolve(response);
+          resolve(response.data);
         },
         (error: AxiosError) => {
           reject(error)
